@@ -1,60 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>身份绑定</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-    <h2 id="status" style="text-align: center; margin-top: 50px; font-family: sans-serif;">正在同步身份，请勿关闭页面...</h2>
-
+    <h2 id="msg">正在初始化身份绑定...</h2>
     <script>
-        // 配置信息已内置
-        const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs"; 
-        const LIFF_ID = "2010389780-7EqdOiVo"; 
-
         async function run() {
             try {
-                // 初始化 LIFF
-                await liff.init({ liffId: LIFF_ID });
-                
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                    return;
-                }
-                
-                // 获取用户信息
+                await liff.init({ liffId: "2010389780-7EqdOiVo" });
                 const profile = await liff.getProfile();
-                const idToken = liff.getDecodedIDToken();
-                const userEmail = idToken ? idToken.email : "无邮箱";
-
-                // 发送数据到 Make
-                const response = await fetch(MAKE_WEBHOOK_URL, {
+                
+                // 将下面这一行替换为你刚刚复制的真实地址
+                const url = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs";
+                
+                const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        email: userEmail,
                         line_id: profile.userId,
-                        line_name: profile.displayName,
-                        timestamp: new Date().toISOString()
+                        line_name: profile.displayName
                     })
                 });
-
+                
                 if (response.ok) {
-                    document.getElementById("status").innerText = "绑定成功！正在关闭...";
-                    setTimeout(() => {
-                        liff.closeWindow();
-                    }, 1000); 
+                    document.getElementById("msg").innerText = "绑定成功！";
                 } else {
-                    document.getElementById("status").innerText = "服务器返回错误，请检查 Make 配置。";
+                    document.getElementById("msg").innerText = "传输失败: " + response.status;
                 }
             } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "错误：" + err.message;
+                document.getElementById("msg").innerText = "错误: " + err.message;
             }
         }
-
         run();
     </script>
 </body>
