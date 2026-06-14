@@ -7,15 +7,14 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-    <h2 id="status">正在同步身份，请勿关闭页面...</h2>
+    <h2 id="status" style="text-align: center; margin-top: 50px; font-family: sans-serif;">正在同步身份，请勿关闭页面...</h2>
 
     <script>
-        // 你的 Make Webhook 地址
+        // 配置信息已内置
         const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs"; 
-        // 你提供的 LIFF ID
         const LIFF_ID = "2010389780-7EqdOiVo"; 
 
-        async function initializeApp() {
+        async function run() {
             try {
                 // 初始化 LIFF
                 await liff.init({ liffId: LIFF_ID });
@@ -48,7 +47,7 @@
                         liff.closeWindow();
                     }, 1000); 
                 } else {
-                    document.getElementById("status").innerText = "服务器返回错误，请联系管理员。";
+                    document.getElementById("status").innerText = "服务器返回错误，请检查 Make 配置。";
                 }
             } catch (err) {
                 console.error(err);
@@ -56,7 +55,7 @@
             }
         }
 
-        initializeApp();
+        run();
     </script>
 </body>
 </html>
