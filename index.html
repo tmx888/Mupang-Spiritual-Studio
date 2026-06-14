@@ -1,28 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>身份绑定</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
+    <h2 id="status">正在绑定身份，请稍候...</h2>
+
     <script>
-        async function run() {
-            await liff.init({ liffId: "2010389780-7EqdOiVo" });
-            if (!liff.isLoggedIn()) {
-                liff.login();
-            } else {
+        // --- 配置区 ---
+        const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs"; 
+        const LIFF_ID = "请在这里填入你原本的LIFF_ID"; // 👈 务必替换为你自己的 LIFF ID
+        // --------------
+
+        async function initializeApp() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+                
                 const profile = await liff.getProfile();
-                const email = new URLSearchParams(window.location.search).get('email');
-                
-                // 这里暂时空着，等您建好 Make 的 Webhook 接收端后，我们再把 Webhook URL 填入
-                alert("身份绑定中..."); 
-                
-                // 模拟发送数据（等会儿我们补上真实地址）
-                console.log("准备发送:", { email, userId: profile.userId });
-                
-                liff.closeWindow();
+                const idToken = liff.getDecodedIDToken();
+                const userEmail = idToken ? idToken.email : "无邮箱";
+
+                // 发送数据到 Make
+                const response = await fetch(MAKE_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: userEmail,
+                        line_id: profile.userId,
+                        line_name: profile.displayName
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById("status").innerText = "绑定成功！您可以关闭此页面。";
+                    liff.closeWindow();
+                } else {
+                    document.getElementById("status").innerText = "发送数据失败，请重试。";
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "发生错误：" + err.message;
             }
         }
-        run();
+
+        initializeApp();
     </script>
 </body>
 </html>
