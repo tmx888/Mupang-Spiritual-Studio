@@ -7,22 +7,25 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-    <h2 id="status">正在绑定身份，请稍候...</h2>
+    <h2 id="status">正在同步身份，请勿关闭页面...</h2>
 
     <script>
-        // --- 配置区 ---
+        // 你的 Make Webhook 地址
         const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs"; 
-        const LIFF_ID = "请在这里填入你原本的LIFF_ID"; // 👈 务必替换为你自己的 LIFF ID
-        // --------------
+        // 填入你的 LIFF ID
+        const LIFF_ID = "请填入你的LIFF_ID"; 
 
         async function initializeApp() {
             try {
+                // 初始化 LIFF
                 await liff.init({ liffId: LIFF_ID });
+                
                 if (!liff.isLoggedIn()) {
                     liff.login();
                     return;
                 }
                 
+                // 获取用户信息
                 const profile = await liff.getProfile();
                 const idToken = liff.getDecodedIDToken();
                 const userEmail = idToken ? idToken.email : "无邮箱";
@@ -34,19 +37,22 @@
                     body: JSON.stringify({
                         email: userEmail,
                         line_id: profile.userId,
-                        line_name: profile.displayName
+                        line_name: profile.displayName,
+                        timestamp: new Date().toISOString()
                     })
                 });
 
                 if (response.ok) {
-                    document.getElementById("status").innerText = "绑定成功！您可以关闭此页面。";
-                    liff.closeWindow();
+                    document.getElementById("status").innerText = "绑定成功！正在关闭...";
+                    setTimeout(() => {
+                        liff.closeWindow();
+                    }, 1000); // 延迟 1 秒确保请求发出
                 } else {
-                    document.getElementById("status").innerText = "发送数据失败，请重试。";
+                    document.getElementById("status").innerText = "服务器返回错误，请联系管理员。";
                 }
             } catch (err) {
                 console.error(err);
-                document.getElementById("status").innerText = "发生错误：" + err.message;
+                document.getElementById("status").innerText = "错误：" + err.message;
             }
         }
 
