@@ -1,42 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-    <h2 id="msg">正在同步数据，请稍候...</h2>
+    <h2>正在绑定身份...</h2>
     <script>
         async function run() {
-            try {
-                // 1. 初始化
-                await liff.init({ liffId: "2010389780-7EqdOiVo" });
-                
-                // 2. 获取资料和邮箱
-                const profile = await liff.getProfile();
-                const idToken = liff.getDecodedIDToken(); 
-                const userEmail = idToken ? idToken.email : "未获取到邮箱";
-                
-                // 3. 发送给 Make
-                const url = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs";
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        line_id: profile.userId,
-                        line_name: profile.displayName,
-                        user_email: userEmail  // 这一行是关键补丁
-                    })
-                });
-                
-                if (response.ok) {
-                    document.getElementById("msg").innerText = "绑定成功！(Email: " + userEmail + ")";
-                } else {
-                    document.getElementById("msg").innerText = "传输失败: " + response.status;
-                }
-            } catch (err) {
-                document.getElementById("msg").innerText = "错误: " + err.message;
-            }
+            // 1. 初始化 LIFF
+            await liff.init({ liffId: "2010389780-7EqdOiVo" });
+            const profile = await liff.getProfile();
+            
+            // 2. 从网址获取 email (例如: .../?email=abc@test.com)
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            
+            // 3. 发送给 Make Scenario C 的 Webhook
+            const url = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs";
+            await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    line_id: profile.userId,
+                    user_email: email // 这里就是那个从表单传过来的邮箱！
+                })
+            });
+            document.body.innerHTML = "<h2>绑定成功！</h2>";
         }
         run();
     </script>
