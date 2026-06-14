@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <script>
+        async function run() {
+            await liff.init({ liffId: "2010389780-7EqdOiVo" });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
+                const profile = await liff.getProfile();
+                const email = new URLSearchParams(window.location.search).get('email');
+                
+                // 这里暂时空着，等您建好 Make 的 Webhook 接收端后，我们再把 Webhook URL 填入
+                alert("身份绑定中..."); 
+                
+                // 模拟发送数据（等会儿我们补上真实地址）
+                console.log("准备发送:", { email, userId: profile.userId });
+                
+                liff.closeWindow();
+            }
+        }
+        run();
+    </script>
+</body>
+</html>
