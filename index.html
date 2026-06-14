@@ -1,17 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-    <h2 id="msg">正在初始化身份绑定...</h2>
+    <h2 id="msg">正在验证身份并同步数据...</h2>
     <script>
         async function run() {
             try {
+                // 1. 初始化 LIFF
                 await liff.init({ liffId: "2010389780-7EqdOiVo" });
-                const profile = await liff.getProfile();
                 
-                // 将下面这一行替换为你刚刚复制的真实地址
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+
+                // 2. 获取用户资料与 Email
+                const profile = await liff.getProfile();
+                const idToken = liff.getDecodedIDToken(); 
+                const userEmail = idToken ? idToken.email : "未获取到邮箱";
+                
+                // 3. 发送数据给 Make (Scenario C 的 Webhook)
                 const url = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs";
                 
                 const response = await fetch(url, {
@@ -19,12 +30,15 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         line_id: profile.userId,
-                        line_name: profile.displayName
+                        line_name: profile.displayName,
+                        user_email: userEmail // 关键：把邮箱发给 Make
                     })
                 });
                 
                 if (response.ok) {
-                    document.getElementById("msg").innerText = "绑定成功！";
+                    document.getElementById("msg").innerText = "绑定成功！(邮箱: " + userEmail + ")";
+                    // 可选：绑定成功后自动关闭窗口
+                    // liff.closeWindow(); 
                 } else {
                     document.getElementById("msg").innerText = "传输失败: " + response.status;
                 }
