@@ -1,54 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-    <h2 id="status">正在初始化...</h2>
-    <button id="btnBind" style="display:none; padding:15px; font-size:18px; background-color: #00B900; color: white;">点击确认绑定身份</button>
-
+    <h2>正在绑定身份...</h2>
     <script>
         async function run() {
-            const status = document.getElementById('status');
-            try {
-                // 1. 初始化 LIFF
-                await liff.init({ liffId: "2010389780-7EqdOivo" });
-                
-                // 2. 检查登录
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                    return;
-                }
-
-                // 3. 获取信息
-                const profile = await liff.getProfile();
-                status.innerText = "欢迎 " + profile.displayName + "，请点击下方绑定";
-                document.getElementById('btnBind').style.display = "block";
-
-                // 4. 绑定按钮点击事件
-                document.getElementById('btnBind').onclick = async () => {
-                    status.innerText = "正在提交数据，请稍候...";
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const email = urlParams.get('email');
-                    const url = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs";
-                    
-                    const response = await fetch(url, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ line_id: profile.userId, user_email: email })
-                    });
-                    
-                    if(response.ok) {
-                        document.body.innerHTML = "<h2>绑定成功！您可以关闭此页面了</h2>";
-                    } else {
-                        status.innerText = "提交失败，服务器返回: " + response.status;
-                    }
-                };
-            } catch (err) {
-                // 如果报错，直接把错误显示在页面上！
-                status.innerText = "报错了: " + err.message;
+            // 1. 初始化 LIFF，使用新的 ID: 2010389780-WljvFcCk
+            await liff.init({ liffId: "2010389780-WljvFcCk" });
+            
+            // 如果用户未登录，先跳转登录
+            if (!liff.isLoggedIn()) {
+                liff.login();
+                return;
             }
+            
+            // 获取用户 profile
+            const profile = await liff.getProfile();
+
+            // 2. 从网址获取 email (例如: .../?email=abc@test.com)
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+
+            // 3. 发送给 Make Scenario C 的 Webhook
+            const url = "https://hook.us2.make.com/dh6pqhsn4irpp8zj2ddybvsgbkarsljs";
+            await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    line_id: profile.userId,
+                    user_email: email // 这里就是那个从表单传来的邮箱!
+                })
+            });
+            
+            document.body.innerHTML = "<h2>绑定成功！</h2>";
         }
         run();
     </script>
